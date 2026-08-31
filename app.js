@@ -203,6 +203,9 @@ function handleIdVerification(event) {
         return;
     }
 
+    // Always fetch latest submissions state from LocalStorage before checking
+    loadSubmissions();
+
     // Search in employeeDatabase with smart zero-padding matching (e.g. 000084 vs 84)
     const cleanInput = idInput.replace(/^0+/, '');
     const emp = employeeDatabase.find(e => {
@@ -535,22 +538,48 @@ function renderSubmissionsTable(filterText = "") {
 }
 
 function deleteSingleSubmission(submissionId) {
-    const itemIndex = submissionsList.findIndex(s => (s.id && s.id === submissionId) || s.empId === submissionId);
-    if (itemIndex === -1) return;
+    const item = submissionsList.find(s => (s.id && String(s.id) === String(submissionId)) || String(s.empId) === String(submissionId));
+    if (!item) return;
 
-    const item = submissionsList[itemIndex];
-    const confirmMsg = `هل أنت تأكد من رغبتك في حذف إقرار الموظف (${item.nameAr || item.empId})؟\n\nتنويه: سيتم مسح الإقرار وتسمح للموظف بإمكانية التسجيل مرة أخرى.`;
+    const empIdToDelete = String(item.empId).trim();
+    const cleanIdToDelete = empIdToDelete.replace(/^0+/, '');
+    const confirmMsg = `هل أنت تأكد من رغبتك في حذف إقرار الموظف (${item.nameAr || item.empId})؟\n\nتنويه: سيتم مسح الإقرار نهائياً وإتاحة إمكانية التسجيل مرة أخرى للموظف.`;
 
     if (confirm(confirmMsg)) {
-        // Remove from local list
-        submissionsList.splice(itemIndex, 1);
+        // 1. Also clear from deleted blacklist if present
+        removeDeletedSubmission(empIdToDelete);
+
+        // 2. Remove ALL matching submission records for this employee ID (smart zero-padding match)
+        submissionsList = submissionsList.filter(s => {
+            const rawSubId = String(s.empId).trim();
+            const cleanSubId = rawSubId.replace(/^0+/, '');
+            const rawItemId = String(s.id || '').trim();
+            
+            const isMatch = (rawSubId === empIdToDelete) ||
+                            (cleanIdToDelete !== "" && cleanSubId === cleanIdToDelete) ||
+                            (rawItemId !== "" && rawItemId === String(submissionId));
+            return !isMatch;
+        });
+
+        // 3. Save updated list to LocalStorage
         localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
 
-        // Remove doc from Firebase if connected
+        // 4. Delete matching documents from Firebase Firestore
         if (dbFirebase) {
-            dbFirebase.collection('submissions').where('empId', '==', item.empId).get()
+            if (item.id) {
+                dbFirebase.collection('submissions').doc(String(item.id)).delete().catch(() => {});
+            }
+
+            dbFirebase.collection('submissions').get()
                 .then(snapshot => {
-                    snapshot.forEach(doc => doc.ref.delete());
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        const docEmpId = String(data.empId || '').trim();
+                        const cleanDocEmpId = docEmpId.replace(/^0+/, '');
+                        if (docEmpId === empIdToDelete || (cleanIdToDelete !== "" && cleanDocEmpId === cleanIdToDelete)) {
+                            doc.ref.delete();
+                        }
+                    });
                 })
                 .catch(err => console.error("Firebase doc delete error:", err));
         }
