@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم الأدمن | طاقة HR Admin</title>
     <meta name="description" content="لوحة تحكم الإدارة لإدارة إقرارات الموظفين وقاعدة البيانات">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" href="logo.png">
     
     <!-- Google Fonts: Cairo & Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,8 +19,9 @@
     <!-- SheetJS fork with cell styling support (reading + writing) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
-    <!-- Firebase App & Firestore SDK -->
+    <!-- Firebase App, Auth & Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
     <link rel="stylesheet" href="style.css">
@@ -34,19 +37,60 @@
         <div class="header-container">
             <div class="brand-identity">
                 <div class="brand-logo-icon">
-                    <i data-lucide="shield-alert"></i>
+                    <img src="logo.png" alt="TAQA Arabia">
                 </div>
                 <div class="brand-text">
                     <h1>لوحة تحكم الأدمن - الموارد البشرية</h1>
                     <span>TAQA HR Admin Dashboard</span>
                 </div>
             </div>
+            <div class="header-actions" id="adminLogoutBar" style="display: none;">
+                <button class="btn-secondary btn-sm" onclick="handleAdminLogout()">
+                    <i data-lucide="log-out"></i>
+                    <span>تسجيل الخروج</span>
+                </button>
+            </div>
         </div>
     </header>
 
+    <!-- Admin Login Screen -->
+    <main class="main-content" id="adminLoginScreen" style="padding: 1.5rem 1rem;">
+        <div class="glass-panel" style="width: 100%; max-width: 420px; padding: 2rem;">
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <img src="logo.png" alt="TAQA Arabia" style="width: 72px; height: 72px; object-fit: contain; margin: 0 auto;">
+                <h2 style="margin-top: 0.75rem; font-size: 1.1rem;">تسجيل دخول الأدمن</h2>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                    هذه اللوحة مخصصة للمسؤولين المصرّح لهم فقط
+                </p>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0.85rem;">
+                <label>البريد الإلكتروني</label>
+                <div class="input-wrapper">
+                    <input type="email" id="adminLoginEmail" placeholder="admin@example.com" autocomplete="username" style="padding-left: 1.1rem;">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 0.5rem;">
+                <label>كلمة المرور</label>
+                <div class="input-wrapper">
+                    <input type="password" id="adminLoginPassword" placeholder="••••••••" autocomplete="current-password" style="padding-left: 1.1rem;" onkeydown="if(event.key==='Enter'){handleAdminLogin();}">
+                </div>
+            </div>
+
+            <div id="adminLoginError" class="alert-box error hidden" style="margin-top: 0.75rem;">
+                <span id="adminLoginErrorText"></span>
+            </div>
+
+            <button class="btn-success" id="adminLoginBtn" onclick="handleAdminLogin()" style="width: 100%; margin-top: 1rem; justify-content: center;">
+                <i data-lucide="log-in" style="width: 16px; height: 16px;"></i>
+                <span>دخول</span>
+            </button>
+        </div>
+    </main>
+
     <!-- Admin Main Container -->
-    <main class="main-content" style="align-items: flex-start; padding: 1.5rem 1rem;">
-        <div class="glass-panel" style="width: 100%; max-width: 1200px; padding: 1.75rem;">
+    <main class="main-content" id="adminDashboardContent" style="align-items: flex-start; padding: 1.5rem 1rem; display: none;">
+        <div class="glass-panel" style="width: 100%; max-width: 1600px; padding: 1.75rem;">
             
             <!-- TOP ROW: Compact Cards on TOP RIGHT, Actions & Search on TOP LEFT -->
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
