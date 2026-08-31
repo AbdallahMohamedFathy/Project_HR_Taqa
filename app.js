@@ -672,27 +672,25 @@ function exportSubmissionsToExcel() {
     }
 
     // Format data cleanly for Excel columns
-    const exportData = submissionsList.map((item, index) => ({
-        "م": index + 1,
-        "الرقم الوظيفي": item.empId,
-        "الاسم بالعربي": item.nameAr,
-        "الاسم بالإنجليزي": item.nameEn,
-        "الرقم القومي (14 رقم)": item.nationalId,
-        "تاريخ ووقت التقديم": item.submittedAt,
-        "حالة الموافقة": "تمت الموافقة على جميع التعهدات"
+    const exportData = submissionsList.map((item) => ({
+        "Employee ID": item.empId,
+        "Employee Name": item.nameEn,
+        "Arabic Name": item.nameAr,
+        "National ID": item.nationalId,
+        "Date & Time": item.submittedAt,
+        "Status": "Approved - All Undertakings Accepted"
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
-    
+
     // Auto-fit column widths
     const colWidths = [
-        { wch: 5 },
         { wch: 15 },
         { wch: 30 },
         { wch: 30 },
         { wch: 22 },
         { wch: 25 },
-        { wch: 30 }
+        { wch: 35 }
     ];
     worksheet['!cols'] = colWidths;
 
