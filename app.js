@@ -66,6 +66,15 @@ function broadcastDataChange() {
     }
 }
 
+function broadcastDataChange() {
+    if (window.BroadcastChannel) {
+        try {
+            const channel = new BroadcastChannel('taqa_hr_portal_sync');
+            channel.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+        } catch (e) {}
+    }
+}
+
 /* ==========================================================================
    1. EMPLOYEE DATABASE MANAGEMENT
    ========================================================================== */
@@ -590,6 +599,34 @@ function deleteSingleSubmission(submissionId) {
     }
 }
 
+function clearAllSubmissionsData() {
+    if (submissionsList.length === 0) {
+        alert("سجل الإقرارات فارغ بالفعل.");
+        return;
+    }
+
+    if (confirm("هل أنت متاكد من مسح جميع الإقرارات المستلمة نهائياً؟\n\nتنويه: سيتم مسح كافة الإقرارات وإتاحة إمكانية التسجيل لجميع الموظفين من جديد.")) {
+        submissionsList = [];
+        localStorage.removeItem('taqa_submissions');
+
+        if (dbFirebase) {
+            dbFirebase.collection('submissions').get()
+                .then(snapshot => {
+                    const batch = dbFirebase.batch();
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    return batch.commit();
+                })
+                .catch(err => console.error("Firebase clear all error:", err));
+        }
+
+        renderSubmissionsTable();
+        updateStatsUI();
+        broadcastDataChange();
+    }
+}
+
 function filterSubmissionsTable() {
     const q = document.getElementById('tableSearchInput').value.trim();
     renderSubmissionsTable(q);
@@ -787,22 +824,14 @@ function listenToFirebaseSubmissions() {
             remoteSubmissions.push(doc.data());
         });
 
-        if (remoteSubmissions.length > 0) {
-            // Sort by date desc
-            remoteSubmissions.sort((a, b) => new Date(b.timestampIso || 0) - new Date(a.timestampIso || 0));
+        // Sort by date desc
+        remoteSubmissions.sort((a, b) => new Date(b.timestampIso || 0) - new Date(a.timestampIso || 0));
 
-            // Merge with local list avoiding duplicates
-            const map = new Map();
-            [...remoteSubmissions, ...submissionsList].forEach(item => {
-                if (item.id && !map.has(item.id)) {
-                    map.set(item.id, item);
-                }
-            });
-            submissionsList = Array.from(map.values());
-            localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
-            renderSubmissionsTable();
-            updateStatsUI();
-        }
+        // Sync remote submissions directly as ground truth
+        submissionsList = remoteSubmissions;
+        localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
+        renderSubmissionsTable();
+        updateStatsUI();
     }, (err) => {
         console.warn("Firestore live snapshot error / fallback to local storage:", err);
     });
