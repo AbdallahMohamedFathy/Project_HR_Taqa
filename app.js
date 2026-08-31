@@ -794,6 +794,9 @@ function initFirebaseIfAvailable() {
         
         if (window.firebase) {
             dbFirebase = firebase.firestore();
+            try {
+                dbFirebase.settings({ experimentalForceLongPolling: true });
+            } catch (err) {}
 
             // Update UI pill status
             if (pill && text) {
