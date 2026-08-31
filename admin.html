@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الأدمن | طاقة HR Admin</title>
+    <meta name="description" content="لوحة تحكم الإدارة لإدارة إقرارات الموظفين وقاعدة البيانات">
+    
+    <!-- Google Fonts: Cairo & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SheetJS for Excel Reading and Writing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- Firebase App & Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Background Decor Elements -->
+    <div class="bg-gradient-glow top-left"></div>
+    <div class="bg-gradient-glow bottom-right"></div>
+    <div class="bg-grid-pattern"></div>
+
+    <!-- Admin Navigation Header -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand-identity">
+                <div class="brand-logo-icon">
+                    <i data-lucide="shield-alert"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>لوحة تحكم الأدمن - الموارد البشرية</h1>
+                    <span>TAQA HR Admin Dashboard</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <a href="index.html" class="btn-secondary btn-sm">
+                    <i data-lucide="external-link"></i>
+                    <span>بوابة الموظفين</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Admin Main Container -->
+    <main class="main-content" style="align-items: flex-start; padding: 1.5rem 1rem;">
+        <div class="glass-panel" style="width: 100%; max-width: 1200px; padding: 1.75rem;">
+            
+            <!-- TOP ROW: Compact Cards on TOP RIGHT, Actions & Search on TOP LEFT -->
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
+                
+                <!-- TOP RIGHT: 2 Compact Cards -->
+                <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
+                    <!-- Compact Card 1: Upload Employee Database Excel -->
+                    <div class="admin-card compact-card" style="padding: 0.65rem 0.95rem; width: 250px; max-width: 100%;">
+                        <div class="admin-card-header" style="gap: 0.4rem; margin-bottom: 0.25rem;">
+                            <i data-lucide="file-spreadsheets" style="width: 15px; height: 15px; color: var(--accent-blue);"></i>
+                            <h3 style="font-size: 0.82rem; color: var(--text-primary);">تحديث قاعدة الموظفين</h3>
+                        </div>
+                        <div class="upload-dropzone">
+                            <input type="file" id="excelDbFileInput" accept=".xlsx, .xls, .csv" onchange="handleExcelDbUpload(event)">
+                            <label for="excelDbFileInput" class="upload-label" style="padding: 0.35rem; font-size: 0.75rem;">
+                                <i data-lucide="upload-cloud" style="width: 14px; height: 14px;"></i>
+                                <span>رفع شيت جديد</span>
+                            </label>
+                        </div>
+                        <div class="db-stats" id="dbStatsText" style="margin-top: 0.25rem; font-size: 0.72rem;">
+                            المسجلين بالقاعدة: <strong id="empDbCount" style="font-size: 0.82rem; color: var(--accent-blue);">0</strong> موظف
+                        </div>
+                    </div>
+
+                    <!-- Compact Card 2: Quick Stats & Actions -->
+                    <div class="admin-card compact-card" style="padding: 0.65rem 0.95rem; width: 250px; max-width: 100%;">
+                        <div class="admin-card-header" style="gap: 0.4rem; margin-bottom: 0.25rem;">
+                            <i data-lucide="bar-chart-3" style="width: 15px; height: 15px; color: var(--accent-blue);"></i>
+                            <h3 style="font-size: 0.82rem; color: var(--text-primary);">إحصائيات الإقرارات</h3>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem;">
+                            <div style="font-size: 0.95rem; font-weight: 800; color: var(--accent-blue); font-family: var(--font-en);">
+                                <span id="submissionsCount">0</span> <span style="font-size: 0.72rem; font-family: var(--font-ar); color: var(--text-secondary);">إقرار مستلم</span>
+                            </div>
+                            <button class="btn-danger btn-sm" onclick="clearAllSubmissionsData()" style="padding: 0.28rem 0.55rem; font-size: 0.7rem;">
+                                <i data-lucide="trash-2" style="width: 12px; height: 12px;"></i>
+                                <span>مسح</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TOP LEFT: Search Input & Export Button -->
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <div class="search-box" style="width: 240px;">
+                        <i data-lucide="search"></i>
+                        <input 
+                            type="text" 
+                            id="tableSearchInput" 
+                            placeholder="بحث بالاسم أو الرقم الوظيفي..." 
+                            oninput="filterSubmissionsTable()"
+                        >
+                    </div>
+
+                    <button class="btn-success" onclick="exportSubmissionsToExcel()" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; white-space: nowrap;">
+                        <i data-lucide="file-output" style="width: 16px; height: 16px;"></i>
+                        <span>تصدير إلى إكسيل (Export Excel)</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <!-- SUBMISSIONS TABLE FULL WIDTH BELOW -->
+            <div class="table-section" style="margin-top: 0;">
+                <div class="table-wrapper">
+                    <table class="data-table" id="submissionsTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الرقم الوظيفي</th>
+                                <th>الاسم بالعربي</th>
+                                <th>الاسم بالإنجليزي</th>
+                                <th>الرقم القومي (14 رقم)</th>
+                                <th>تاريخ ووقت الإرسال</th>
+                                <th>حالة الموافقة</th>
+                                <th>إجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="submissionsTableBody">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Shared App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
