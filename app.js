@@ -419,15 +419,68 @@ function resetForm() {
     goToStep(1);
 }
 
-/* ==========================================================================
-   3. SUBMISSIONS LOCAL & FIREBASE STORAGE
-   ========================================================================== */
+let deletedSubmissionsList = [];
+
+function loadDeletedSubmissions() {
+    const stored = localStorage.getItem('taqa_deleted_submissions');
+    if (stored) {
+        try {
+            deletedSubmissionsList = JSON.parse(stored);
+        } catch (e) {
+            deletedSubmissionsList = [];
+        }
+    } else {
+        deletedSubmissionsList = [];
+    }
+}
+
+function saveDeletedSubmissions() {
+    localStorage.setItem('taqa_deleted_submissions', JSON.stringify(deletedSubmissionsList));
+}
+
+function isSubmissionDeleted(item) {
+    if (!item) return false;
+    loadDeletedSubmissions();
+    const rawId = String(item.id || '').trim();
+    const rawEmpId = String(item.empId || '').trim();
+    const cleanEmpId = rawEmpId.replace(/^0+/, '');
+
+    return deletedSubmissionsList.some(d => {
+        const rawD = String(d).trim();
+        const cleanD = rawD.replace(/^0+/, '');
+        return (rawId !== "" && rawD === rawId) ||
+               (rawEmpId !== "" && rawD === rawEmpId) ||
+               (cleanEmpId !== "" && cleanD === cleanEmpId);
+    });
+}
+
+function addDeletedSubmission(item) {
+    if (!item) return;
+    loadDeletedSubmissions();
+    if (item.id) deletedSubmissionsList.push(String(item.id));
+    if (item.empId) deletedSubmissionsList.push(String(item.empId));
+    saveDeletedSubmissions();
+}
+
+function removeDeletedSubmission(empId) {
+    if (!empId) return;
+    loadDeletedSubmissions();
+    const cleanEmpId = String(empId).trim().replace(/^0+/, '');
+    deletedSubmissionsList = deletedSubmissionsList.filter(d => {
+        const rawD = String(d).trim();
+        const cleanD = rawD.replace(/^0+/, '');
+        return rawD !== String(empId).trim() && (cleanEmpId === "" || cleanD !== cleanEmpId);
+    });
+    saveDeletedSubmissions();
+}
 
 function loadSubmissions() {
+    loadDeletedSubmissions();
     const stored = localStorage.getItem('taqa_submissions');
     if (stored) {
         try {
-            submissionsList = JSON.parse(stored);
+            const rawList = JSON.parse(stored);
+            submissionsList = Array.isArray(rawList) ? rawList.filter(item => !isSubmissionDeleted(item)) : [];
         } catch (e) {
             submissionsList = [];
         }
@@ -436,6 +489,9 @@ function loadSubmissions() {
 }
 
 function saveSubmissionRecord(record) {
+    // If re-submitting after deletion, clear from deleted blacklist
+    removeDeletedSubmission(record.empId);
+
     // Save locally
     submissionsList.unshift(record);
     localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
@@ -443,9 +499,9 @@ function saveSubmissionRecord(record) {
     // Broadcast instant sync across tabs
     broadcastDataChange();
 
-    // Save to Firebase Firestore if initialized
+    // Save to Firebase Firestore using explicit document ID
     if (dbFirebase) {
-        dbFirebase.collection('submissions').add(record)
+        dbFirebase.collection('submissions').doc(String(record.id)).set(record)
             .then(() => console.log("Successfully synced submission to Firebase"))
             .catch(err => console.error("Firebase sync error:", err));
     }
@@ -456,10 +512,24 @@ function saveSubmissionRecord(record) {
 
 function clearAllSubmissionsData() {
     if (confirm("هل أنت تأكد من رغبتك في حذف جميع الإقرارات المسجلة؟")) {
+        // Add all current submissions to deletion blacklist
+        submissionsList.forEach(item => addDeletedSubmission(item));
+        
         submissionsList = [];
         localStorage.removeItem('taqa_submissions');
+
+        // Delete all documents from Firebase Firestore if connected
+        if (dbFirebase) {
+            dbFirebase.collection('submissions').get()
+                .then(snapshot => {
+                    snapshot.forEach(doc => doc.ref.delete());
+                })
+                .catch(err => console.error("Firebase bulk delete error:", err));
+        }
+
         renderSubmissionsTable();
         updateStatsUI();
+        broadcastDataChange();
     }
 }
 
@@ -539,15 +609,21 @@ function deleteSingleSubmission(submissionId) {
     if (itemIndex === -1) return;
 
     const item = submissionsList[itemIndex];
-    const confirmMsg = `هل أنت تأكد من رغبتك في حذف إقرار الموظف (${item.nameAr || item.empId})؟\n\nتنويه: سيتم مسح الإقرار وتسمح للموظف بإمكانية التسجيل مرة أخرى.`;
+    const confirmMsg = `هل أنت تأكد من رغبتك في حذف إقرار الموظف (${item.nameAr || item.empId})؟\n\nتنويه: سيتم مسح الإقرار نهائياً ولن يعود للظهور مرة أخرى.`;
 
     if (confirm(confirmMsg)) {
-        // Remove from local list
+        // 1. Add to permanent deletion blacklist
+        addDeletedSubmission(item);
+
+        // 2. Remove from local active list
         submissionsList.splice(itemIndex, 1);
         localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
 
-        // Remove doc from Firebase if connected
+        // 3. Remove doc from Firebase Firestore deterministically
         if (dbFirebase) {
+            const docId = String(item.id || submissionId);
+            dbFirebase.collection('submissions').doc(docId).delete().catch(() => {});
+
             dbFirebase.collection('submissions').where('empId', '==', item.empId).get()
                 .then(snapshot => {
                     snapshot.forEach(doc => doc.ref.delete());
@@ -709,17 +785,24 @@ function listenToFirebaseSubmissions() {
     dbFirebase.collection('submissions').onSnapshot((snapshot) => {
         const remoteSubmissions = [];
         snapshot.forEach(doc => {
-            remoteSubmissions.push(doc.data());
+            const data = doc.data();
+            // Filter out any submission that is in the deletion blacklist
+            if (!isSubmissionDeleted(data)) {
+                remoteSubmissions.push(data);
+            }
         });
 
-        if (remoteSubmissions.length > 0) {
+        // Filter local list against deletion blacklist too
+        submissionsList = submissionsList.filter(item => !isSubmissionDeleted(item));
+
+        if (remoteSubmissions.length > 0 || snapshot.empty) {
             // Sort by date desc
             remoteSubmissions.sort((a, b) => new Date(b.timestampIso || 0) - new Date(a.timestampIso || 0));
 
             // Merge with local list avoiding duplicates
             const map = new Map();
             [...remoteSubmissions, ...submissionsList].forEach(item => {
-                if (item.id && !map.has(item.id)) {
+                if (item && item.id && !isSubmissionDeleted(item) && !map.has(item.id)) {
                     map.set(item.id, item);
                 }
             });
