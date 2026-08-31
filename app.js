@@ -848,6 +848,16 @@ function listenToFirebaseSubmissions() {
 function listenToFirebaseEmployeeRegistry() {
     if (!dbFirebase) return;
 
+    dbFirebase.collection('employee_registry').get().then((snapshot) => {
+        if (snapshot.empty && employeeDatabase.length > 0) {
+            // Cloud registry is empty but we have local data (e.g. uploaded before
+            // Firebase connected) — push it up once so other devices can see it.
+            syncEmployeeDbToFirebase(employeeDatabase);
+        }
+    }).catch((err) => {
+        console.warn("Firestore employee registry initial check failed:", err);
+    });
+
     dbFirebase.collection('employee_registry').onSnapshot((snapshot) => {
         const remoteEmployees = [];
         snapshot.forEach(doc => {
