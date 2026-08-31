@@ -613,7 +613,7 @@ function exportSubmissionsToExcel() {
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
-    
+
     // Auto-fit column widths
     const colWidths = [
         { wch: 5 },
@@ -626,11 +626,53 @@ function exportSubmissionsToExcel() {
     ];
     worksheet['!cols'] = colWidths;
 
+    applyExcelHeaderStyle(worksheet);
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "الإقرارات المستلمة");
 
     const fileName = `إقرارات_الموظفين_طاقة_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(workbook, fileName);
+}
+
+// Applies the shared header/border style (beige bold header, bordered cells)
+// used across all exported Excel sheets, regardless of column count.
+function applyExcelHeaderStyle(worksheet) {
+    const range = XLSX.utils.decode_range(worksheet['!ref']);
+    const headerStyle = {
+        fill: { patternType: "solid", fgColor: { rgb: "FCE4B4" } },
+        font: { bold: true, color: { rgb: "000000" } },
+        alignment: { horizontal: "center", vertical: "center", wrapText: true },
+        border: {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } }
+        }
+    };
+    const bodyStyle = {
+        alignment: { horizontal: "center", vertical: "center" },
+        border: {
+            top: { style: "thin", color: { rgb: "000000" } },
+            bottom: { style: "thin", color: { rgb: "000000" } },
+            left: { style: "thin", color: { rgb: "000000" } },
+            right: { style: "thin", color: { rgb: "000000" } }
+        }
+    };
+
+    for (let col = range.s.c; col <= range.e.c; col++) {
+        const headerCellRef = XLSX.utils.encode_cell({ r: range.s.r, c: col });
+        if (worksheet[headerCellRef]) {
+            worksheet[headerCellRef].s = headerStyle;
+        }
+
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+            const cellRef = XLSX.utils.encode_cell({ r: row, c: col });
+            if (worksheet[cellRef]) {
+                worksheet[cellRef].s = bodyStyle;
+            }
+        }
+    }
 }
 
 function updateStatsUI() {
