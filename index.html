@@ -17,7 +17,7 @@
     <!-- SheetJS fork with cell styling support (reading + writing) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
-    <!-- Firebase App & Firestore SDK (v9/v10 Compat for easy browser script usage) -->
+    <!-- Firebase App & Firestore SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
@@ -28,8 +28,6 @@
     <div class="bg-gradient-glow top-left"></div>
     <div class="bg-gradient-glow bottom-right"></div>
     <div class="bg-grid-pattern"></div>
-
-
 
     <!-- Main Container -->
     <main class="main-content">
@@ -63,14 +61,13 @@
                     <div class="form-group">
                         <label for="employeeIdInput">
                             <i data-lucide="credit-card"></i>
-                            الرقم الوظيفي (6 أرقام):
+                            الرقم الوظيفي:
                         </label>
                         <div class="input-wrapper">
                             <input 
                                 type="text" 
                                 id="employeeIdInput" 
-                                placeholder="أدخل الرقم الوظيفي (6 أرقام)..." 
-                                pattern="[0-9]{6}"
+                                placeholder="أدخل الرقم الوظيفي (مثال: 13 أو 800)..." 
                                 maxlength="6"
                                 required
                                 autocomplete="off"
@@ -81,7 +78,7 @@
                                 <i data-lucide="x"></i>
                             </button>
                         </div>
-                        <span class="input-hint">مثال: 100001، 508201</span>
+                        <span class="input-hint" style="color: var(--accent-blue); font-weight: 600;">مثال: كتابة 13 تطابق (000013)، أو كتابة 800 تطابق (000800)</span>
                     </div>
 
                     <div id="step1Error" class="alert-box error hidden">
@@ -248,7 +245,6 @@
             </div>
         </div>
     </main>
-
 
     <!-- Shared App Script -->
     <script src="app.js"></script>
