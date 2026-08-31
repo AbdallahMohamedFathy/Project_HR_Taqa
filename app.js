@@ -613,9 +613,15 @@ function updateStatsUI() {
    5. FIREBASE DYNAMIC INTEGRATION
    ========================================================================== */
 
-// Firebase configuration must be provided by the user via the settings modal
-// (saved to localStorage as 'taqa_firebase_config') — no keys are embedded in source.
-const DEFAULT_FIREBASE_CONFIG = null;
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCeeB1vYO0WxhJA3A5G9GwtvLOHGoxMtLQ",
+  authDomain: "project-hr-taqa.firebaseapp.com",
+  projectId: "project-hr-taqa",
+  storageBucket: "project-hr-taqa.firebasestorage.app",
+  messagingSenderId: "304602057029",
+  appId: "1:304602057029:web:aec731b889faf8ef4fd62c",
+  measurementId: "G-FWE7DZ0T8Z"
+};
 
 function toggleFirebaseConfigModal() {
     const modal = document.getElementById('firebaseConfigModal');
