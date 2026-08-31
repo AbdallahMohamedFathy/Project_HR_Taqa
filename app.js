@@ -269,6 +269,7 @@ function clearEmployeeId() {
 function validateNationalInput(input) {
     // Keep digits only
     input.value = input.value.replace(/[^0-9]/g, '');
+    input.setCustomValidity('');
     const currentLength = input.value.length;
     const counter = document.getElementById('nationalIdCounter');
     counter.innerText = `${currentLength} / 14`;

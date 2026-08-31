@@ -69,15 +69,16 @@
                             الرقم الوظيفي:
                         </label>
                         <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="employeeIdInput" 
-                                placeholder="أدخل الرقم الوظيفي (مثال: 13 أو 800)..." 
+                            <input
+                                type="text"
+                                id="employeeIdInput"
+                                placeholder="أدخل الرقم الوظيفي (مثال: 13 أو 800)..."
                                 maxlength="6"
                                 required
                                 autocomplete="off"
                                 autofocus
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.setCustomValidity('')"
+                                oninvalid="this.setCustomValidity('برجاء إدخال الرقم الوظيفي.')"
                             >
                             <button type="button" class="clear-input-btn" onclick="clearEmployeeId()" title="مسح">
                                 <i data-lucide="x"></i>
@@ -136,14 +137,15 @@
                             الرقم القومي (14 رقم):
                         </label>
                         <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="nationalIdInput" 
-                                placeholder="أدخل الرقم القومي المكون من 14 رقم..." 
+                            <input
+                                type="text"
+                                id="nationalIdInput"
+                                placeholder="أدخل الرقم القومي المكون من 14 رقم..."
                                 maxlength="14"
                                 required
                                 autocomplete="off"
                                 oninput="validateNationalInput(this)"
+                                oninvalid="this.setCustomValidity('برجاء إدخال الرقم القومي المكوّن من 14 رقم.')"
                             >
                             <span class="char-counter" id="nationalIdCounter">0 / 14</span>
                         </div>
@@ -159,7 +161,7 @@
 
                         <div class="agreements-list">
                             <label class="checkbox-card">
-                                <input type="checkbox" id="agree1" class="agreement-checkbox" required>
+                                <input type="checkbox" id="agree1" class="agreement-checkbox" required oninvalid="this.setCustomValidity('برجاء الموافقة على هذا الإقرار للمتابعة.')" oninput="this.setCustomValidity('')">
                                 <span class="checkbox-custom"></span>
                                 <div class="checkbox-text">
                                     <strong>الإقرار بصحة البيانات:</strong>
@@ -168,7 +170,7 @@
                             </label>
 
                             <label class="checkbox-card">
-                                <input type="checkbox" id="agree2" class="agreement-checkbox" required>
+                                <input type="checkbox" id="agree2" class="agreement-checkbox" required oninvalid="this.setCustomValidity('برجاء الموافقة على هذا الإقرار للمتابعة.')" oninput="this.setCustomValidity('')">
                                 <span class="checkbox-custom"></span>
                                 <div class="checkbox-text">
                                     <strong>الموافقة على الشروط التنظيمية:</strong>
@@ -177,7 +179,7 @@
                             </label>
 
                             <label class="checkbox-card">
-                                <input type="checkbox" id="agree3" class="agreement-checkbox" required>
+                                <input type="checkbox" id="agree3" class="agreement-checkbox" required oninvalid="this.setCustomValidity('برجاء الموافقة على هذا الإقرار للمتابعة.')" oninput="this.setCustomValidity('')">
                                 <span class="checkbox-custom"></span>
                                 <div class="checkbox-text">
                                     <strong>الالتزام بالتعليمات:</strong>
