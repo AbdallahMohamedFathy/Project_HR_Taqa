@@ -804,9 +804,15 @@ function initFirebaseIfAvailable() {
                 text.innerText = `Firebase متصل بنجاح: (${config.projectId})`;
             }
 
-            // Listen live for cloud submissions if available
-            listenToFirebaseSubmissions();
-            listenToFirebaseEmployeeRegistry();
+            // The admin dashboard's data listeners only start after login
+            // (see initAdminAuthGate). Non-admin pages (employee portal)
+            // don't have #adminLoginScreen, so they keep working as before.
+            if (!document.getElementById('adminLoginScreen')) {
+                listenToFirebaseSubmissions();
+                listenToFirebaseEmployeeRegistry();
+            } else {
+                initAdminAuthGate();
+            }
         }
 
     } catch (e) {
@@ -815,6 +821,73 @@ function initFirebaseIfAvailable() {
             pill.querySelector('.status-dot').className = "status-dot warning";
             text.innerText = "خطأ في الاتصال بـ Firebase (يرجى مراجعة الإعدادات)";
         }
+    }
+}
+
+// Gates the admin dashboard behind Firebase Authentication (email/password).
+// Only relevant on admin.html, which has #adminLoginScreen in the DOM.
+function initAdminAuthGate() {
+    const loginScreen = document.getElementById('adminLoginScreen');
+    const dashboard = document.getElementById('adminDashboardContent');
+    const logoutBar = document.getElementById('adminLogoutBar');
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            loginScreen.style.display = 'none';
+            dashboard.style.display = 'flex';
+            if (logoutBar) logoutBar.style.display = 'flex';
+            listenToFirebaseSubmissions();
+            listenToFirebaseEmployeeRegistry();
+        } else {
+            loginScreen.style.display = 'flex';
+            dashboard.style.display = 'none';
+            if (logoutBar) logoutBar.style.display = 'none';
+        }
+    });
+}
+
+function handleAdminLogin() {
+    const email = document.getElementById('adminLoginEmail').value.trim();
+    const password = document.getElementById('adminLoginPassword').value;
+    const errorBox = document.getElementById('adminLoginError');
+    const errorText = document.getElementById('adminLoginErrorText');
+    const loginBtn = document.getElementById('adminLoginBtn');
+
+    errorBox.classList.add('hidden');
+
+    if (!email || !password) {
+        errorText.innerText = "برجاء إدخال البريد الإلكتروني وكلمة المرور.";
+        errorBox.classList.remove('hidden');
+        return;
+    }
+
+    if (!window.firebase || !firebase.auth) {
+        errorText.innerText = "تعذر الاتصال بخدمة تسجيل الدخول. يرجى المحاولة لاحقاً.";
+        errorBox.classList.remove('hidden');
+        return;
+    }
+
+    loginBtn.disabled = true;
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .catch((err) => {
+            const messages = {
+                'auth/invalid-email': "صيغة البريد الإلكتروني غير صحيحة.",
+                'auth/user-not-found': "لا يوجد حساب مسجل بهذا البريد الإلكتروني.",
+                'auth/wrong-password': "كلمة المرور غير صحيحة.",
+                'auth/invalid-credential': "بيانات الدخول غير صحيحة.",
+                'auth/too-many-requests': "محاولات كثيرة جداً، برجاء المحاولة لاحقاً."
+            };
+            errorText.innerText = messages[err.code] || "حدث خطأ أثناء تسجيل الدخول.";
+            errorBox.classList.remove('hidden');
+        })
+        .finally(() => {
+            loginBtn.disabled = false;
+        });
+}
+
+function handleAdminLogout() {
+    if (window.firebase && firebase.auth) {
+        firebase.auth().signOut();
     }
 }
 
