@@ -66,6 +66,15 @@ function broadcastDataChange() {
     }
 }
 
+function broadcastDataChange() {
+    if (window.BroadcastChannel) {
+        try {
+            const channel = new BroadcastChannel('taqa_hr_portal_sync');
+            channel.postMessage({ type: 'DATA_UPDATED', timestamp: Date.now() });
+        } catch (e) {}
+    }
+}
+
 /* ==========================================================================
    1. EMPLOYEE DATABASE MANAGEMENT
    ========================================================================== */
@@ -422,68 +431,15 @@ function resetForm() {
     goToStep(1);
 }
 
-let deletedSubmissionsList = [];
-
-function loadDeletedSubmissions() {
-    const stored = localStorage.getItem('taqa_deleted_submissions');
-    if (stored) {
-        try {
-            deletedSubmissionsList = JSON.parse(stored);
-        } catch (e) {
-            deletedSubmissionsList = [];
-        }
-    } else {
-        deletedSubmissionsList = [];
-    }
-}
-
-function saveDeletedSubmissions() {
-    localStorage.setItem('taqa_deleted_submissions', JSON.stringify(deletedSubmissionsList));
-}
-
-function isSubmissionDeleted(item) {
-    if (!item) return false;
-    loadDeletedSubmissions();
-    const rawId = String(item.id || '').trim();
-    const rawEmpId = String(item.empId || '').trim();
-    const cleanEmpId = rawEmpId.replace(/^0+/, '');
-
-    return deletedSubmissionsList.some(d => {
-        const rawD = String(d).trim();
-        const cleanD = rawD.replace(/^0+/, '');
-        return (rawId !== "" && rawD === rawId) ||
-               (rawEmpId !== "" && rawD === rawEmpId) ||
-               (cleanEmpId !== "" && cleanD === cleanEmpId);
-    });
-}
-
-function addDeletedSubmission(item) {
-    if (!item) return;
-    loadDeletedSubmissions();
-    if (item.id) deletedSubmissionsList.push(String(item.id));
-    if (item.empId) deletedSubmissionsList.push(String(item.empId));
-    saveDeletedSubmissions();
-}
-
-function removeDeletedSubmission(empId) {
-    if (!empId) return;
-    loadDeletedSubmissions();
-    const cleanEmpId = String(empId).trim().replace(/^0+/, '');
-    deletedSubmissionsList = deletedSubmissionsList.filter(d => {
-        const rawD = String(d).trim();
-        const cleanD = rawD.replace(/^0+/, '');
-        return rawD !== String(empId).trim() && (cleanEmpId === "" || cleanD !== cleanEmpId);
-    });
-    saveDeletedSubmissions();
-}
+/* ==========================================================================
+   3. SUBMISSIONS LOCAL & FIREBASE STORAGE
+   ========================================================================== */
 
 function loadSubmissions() {
-    loadDeletedSubmissions();
     const stored = localStorage.getItem('taqa_submissions');
     if (stored) {
         try {
-            const rawList = JSON.parse(stored);
-            submissionsList = Array.isArray(rawList) ? rawList.filter(item => !isSubmissionDeleted(item)) : [];
+            submissionsList = JSON.parse(stored);
         } catch (e) {
             submissionsList = [];
         }
@@ -492,9 +448,6 @@ function loadSubmissions() {
 }
 
 function saveSubmissionRecord(record) {
-    // If re-submitting after deletion, clear from deleted blacklist
-    removeDeletedSubmission(record.empId);
-
     // Save locally
     submissionsList.unshift(record);
     localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
@@ -502,9 +455,9 @@ function saveSubmissionRecord(record) {
     // Broadcast instant sync across tabs
     broadcastDataChange();
 
-    // Save to Firebase Firestore using explicit document ID
+    // Save to Firebase Firestore if initialized
     if (dbFirebase) {
-        dbFirebase.collection('submissions').doc(String(record.id)).set(record)
+        dbFirebase.collection('submissions').add(record)
             .then(() => console.log("Successfully synced submission to Firebase"))
             .catch(err => console.error("Firebase sync error:", err));
     }
@@ -515,24 +468,10 @@ function saveSubmissionRecord(record) {
 
 function clearAllSubmissionsData() {
     if (confirm("هل أنت تأكد من رغبتك في حذف جميع الإقرارات المسجلة؟")) {
-        // Add all current submissions to deletion blacklist
-        submissionsList.forEach(item => addDeletedSubmission(item));
-        
         submissionsList = [];
         localStorage.removeItem('taqa_submissions');
-
-        // Delete all documents from Firebase Firestore if connected
-        if (dbFirebase) {
-            dbFirebase.collection('submissions').get()
-                .then(snapshot => {
-                    snapshot.forEach(doc => doc.ref.delete());
-                })
-                .catch(err => console.error("Firebase bulk delete error:", err));
-        }
-
         renderSubmissionsTable();
         updateStatsUI();
-        broadcastDataChange();
     }
 }
 
@@ -652,6 +591,34 @@ function deleteSingleSubmission(submissionId) {
                     });
                 })
                 .catch(err => console.error("Firebase doc delete error:", err));
+        }
+
+        renderSubmissionsTable();
+        updateStatsUI();
+        broadcastDataChange();
+    }
+}
+
+function clearAllSubmissionsData() {
+    if (submissionsList.length === 0) {
+        alert("سجل الإقرارات فارغ بالفعل.");
+        return;
+    }
+
+    if (confirm("هل أنت متاكد من مسح جميع الإقرارات المستلمة نهائياً؟\n\nتنويه: سيتم مسح كافة الإقرارات وإتاحة إمكانية التسجيل لجميع الموظفين من جديد.")) {
+        submissionsList = [];
+        localStorage.removeItem('taqa_submissions');
+
+        if (dbFirebase) {
+            dbFirebase.collection('submissions').get()
+                .then(snapshot => {
+                    const batch = dbFirebase.batch();
+                    snapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    return batch.commit();
+                })
+                .catch(err => console.error("Firebase clear all error:", err));
         }
 
         renderSubmissionsTable();
@@ -854,32 +821,17 @@ function listenToFirebaseSubmissions() {
     dbFirebase.collection('submissions').onSnapshot((snapshot) => {
         const remoteSubmissions = [];
         snapshot.forEach(doc => {
-            const data = doc.data();
-            // Filter out any submission that is in the deletion blacklist
-            if (!isSubmissionDeleted(data)) {
-                remoteSubmissions.push(data);
-            }
+            remoteSubmissions.push(doc.data());
         });
 
-        // Filter local list against deletion blacklist too
-        submissionsList = submissionsList.filter(item => !isSubmissionDeleted(item));
+        // Sort by date desc
+        remoteSubmissions.sort((a, b) => new Date(b.timestampIso || 0) - new Date(a.timestampIso || 0));
 
-        if (remoteSubmissions.length > 0 || snapshot.empty) {
-            // Sort by date desc
-            remoteSubmissions.sort((a, b) => new Date(b.timestampIso || 0) - new Date(a.timestampIso || 0));
-
-            // Merge with local list avoiding duplicates
-            const map = new Map();
-            [...remoteSubmissions, ...submissionsList].forEach(item => {
-                if (item && item.id && !isSubmissionDeleted(item) && !map.has(item.id)) {
-                    map.set(item.id, item);
-                }
-            });
-            submissionsList = Array.from(map.values());
-            localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
-            renderSubmissionsTable();
-            updateStatsUI();
-        }
+        // Sync remote submissions directly as ground truth
+        submissionsList = remoteSubmissions;
+        localStorage.setItem('taqa_submissions', JSON.stringify(submissionsList));
+        renderSubmissionsTable();
+        updateStatsUI();
     }, (err) => {
         console.warn("Firestore live snapshot error / fallback to local storage:", err);
     });
