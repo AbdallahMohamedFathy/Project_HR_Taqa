@@ -520,17 +520,17 @@ function renderSubmissionsTable(filterText = "") {
         const tr = document.createElement('tr');
         const uniqueId = item.id || item.empId;
         tr.innerHTML = `
-            <td>${idx + 1}</td>
-            <td><strong style="color: var(--accent-cyan); font-family: var(--font-en);">${item.empId}</strong></td>
-            <td>${item.nameAr || '-'}</td>
-            <td dir="ltr" style="text-align: right; font-family: var(--font-en);">${item.nameEn || '-'}</td>
-            <td><code style="font-family: var(--font-en); font-size: 0.9rem; color: var(--accent-blue);">${item.nationalId}</code></td>
-            <td style="font-size: 0.82rem; color: var(--text-secondary);">${item.submittedAt}</td>
-            <td><span class="status-badge">✓ مؤكد وموافق</span></td>
-            <td>
-                <button 
-                    type="button" 
-                    onclick="deleteSingleSubmission('${uniqueId}')" 
+            <td data-label="#">${idx + 1}</td>
+            <td data-label="الرقم الوظيفي"><strong style="color: var(--accent-cyan); font-family: var(--font-en);">${item.empId}</strong></td>
+            <td data-label="الاسم بالعربي">${item.nameAr || '-'}</td>
+            <td data-label="الاسم بالإنجليزي" dir="ltr" style="text-align: right; font-family: var(--font-en);">${item.nameEn || '-'}</td>
+            <td data-label="الرقم القومي"><code style="font-family: var(--font-en); font-size: 0.9rem; color: var(--accent-blue);">${item.nationalId}</code></td>
+            <td data-label="تاريخ الإرسال" style="font-size: 0.82rem; color: var(--text-secondary);">${item.submittedAt}</td>
+            <td data-label="حالة الموافقة"><span class="status-badge">✓ مؤكد وموافق</span></td>
+            <td data-label="إجراء">
+                <button
+                    type="button"
+                    onclick="deleteSingleSubmission('${uniqueId}')"
                     style="background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; padding: 0.25rem 0.65rem; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: inline-flex; align-items: center; gap: 0.25rem; transition: all 0.2s;"
                     onmouseover="this.style.background='#fca5a5'"
                     onmouseout="this.style.background='#fee2e2'"

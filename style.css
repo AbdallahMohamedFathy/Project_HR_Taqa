@@ -842,6 +842,48 @@ body {
 .status-dot.success { background: var(--accent-emerald); }
 .status-dot.warning { background: #f59e0b; }
 
+.admin-main {
+    align-items: flex-start;
+    padding: 1.5rem 1rem;
+}
+.admin-panel {
+    width: 100%;
+    max-width: 1600px;
+    padding: 1.75rem;
+}
+.admin-toprow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+.admin-toprow-cards {
+    display: flex;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+.admin-toprow-cards .compact-card {
+    padding: 0.65rem 0.95rem;
+    width: 250px;
+    max-width: 100%;
+}
+.admin-toprow-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+.admin-search-box {
+    width: 240px;
+}
+.admin-export-btn {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
 .admin-sections-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -1033,5 +1075,166 @@ body {
     }
     .search-box {
         width: 100%;
+    }
+}
+
+/* Responsive: General Header (both portal & admin) */
+@media (max-width: 640px) {
+    .app-header {
+        padding: 0.7rem 1rem;
+    }
+    .brand-identity {
+        gap: 0.6rem;
+        min-width: 0;
+    }
+    .brand-logo-icon {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+    }
+    .brand-text {
+        min-width: 0;
+    }
+    .brand-text h1 {
+        font-size: 0.88rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .brand-text span {
+        font-size: 0.62rem;
+    }
+    .header-container {
+        gap: 0.5rem;
+    }
+}
+@media (max-width: 420px) {
+    .logout-label {
+        display: none;
+    }
+    .header-actions .btn-secondary {
+        padding: 0.5rem 0.65rem;
+    }
+}
+
+/* Responsive: Admin Dashboard */
+@media (max-width: 900px) {
+    .admin-panel {
+        padding: 1.1rem;
+    }
+    .admin-toprow-cards .compact-card {
+        width: 100%;
+    }
+    .admin-toprow-cards {
+        width: 100%;
+    }
+    .admin-toprow-actions {
+        width: 100%;
+    }
+    .admin-search-box {
+        width: 100%;
+        flex: 1;
+    }
+    .admin-export-btn span {
+        display: none;
+    }
+    .admin-export-btn {
+        padding: 0.6rem 0.85rem;
+    }
+}
+@media (max-width: 640px) {
+    .admin-main {
+        padding: 1rem 0.65rem;
+    }
+    .admin-panel {
+        padding: 0.85rem;
+        border-radius: var(--radius-md);
+    }
+    .admin-toprow {
+        gap: 0.75rem;
+    }
+    .admin-toprow-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .admin-export-btn {
+        width: 100%;
+        justify-content: center;
+    }
+    .admin-export-btn span {
+        display: inline;
+    }
+
+    /* Card-style table on small screens instead of a cramped grid */
+    .table-wrapper {
+        border: none;
+        background: transparent;
+        overflow-x: visible;
+    }
+    .data-table, .data-table thead, .data-table tbody, .data-table th, .data-table td, .data-table tr {
+        display: block;
+        width: 100%;
+    }
+    .data-table thead {
+        display: none;
+    }
+    .data-table tr {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: var(--radius-md);
+        margin-bottom: 0.75rem;
+        padding: 0.5rem 0.85rem;
+    }
+    .data-table td {
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.55rem 0;
+        border-bottom: 1px solid var(--border-subtle);
+        font-size: 0.88rem;
+        text-align: right !important;
+        white-space: normal;
+        word-break: break-word;
+    }
+    .data-table td:last-child {
+        border-bottom: none;
+    }
+    .data-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: var(--text-secondary);
+        font-size: 0.78rem;
+        flex-shrink: 0;
+        margin-left: 0.75rem;
+    }
+}
+
+/* Responsive: Employee Portal fine-tuning */
+@media (max-width: 420px) {
+    .stepper-header {
+        margin-bottom: 1.75rem;
+    }
+    .step-title {
+        display: none;
+    }
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+    }
+    .section-intro h2 {
+        font-size: 1.15rem;
+    }
+    .input-wrapper input {
+        font-size: 0.95rem;
+        padding: 0.75rem 1rem;
+        padding-left: 2.4rem;
+    }
+    .checkbox-text strong {
+        font-size: 0.82rem;
+    }
+    .checkbox-text p {
+        font-size: 0.76rem;
     }
 }

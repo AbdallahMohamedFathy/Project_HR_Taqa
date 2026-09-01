@@ -47,7 +47,7 @@
             <div class="header-actions" id="adminLogoutBar" style="display: none;">
                 <button class="btn-secondary btn-sm" onclick="handleAdminLogout()">
                     <i data-lucide="log-out"></i>
-                    <span>تسجيل الخروج</span>
+                    <span class="logout-label">تسجيل الخروج</span>
                 </button>
             </div>
         </div>
@@ -89,16 +89,16 @@
     </main>
 
     <!-- Admin Main Container -->
-    <main class="main-content" id="adminDashboardContent" style="align-items: flex-start; padding: 1.5rem 1rem; display: none;">
-        <div class="glass-panel" style="width: 100%; max-width: 1600px; padding: 1.75rem;">
-            
+    <main class="main-content admin-main" id="adminDashboardContent" style="display: none;">
+        <div class="glass-panel admin-panel">
+
             <!-- TOP ROW: Compact Cards on TOP RIGHT, Actions & Search on TOP LEFT -->
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem;">
-                
+            <div class="admin-toprow">
+
                 <!-- TOP RIGHT: 2 Compact Cards -->
-                <div style="display: flex; gap: 0.85rem; flex-wrap: wrap;">
+                <div class="admin-toprow-cards">
                     <!-- Compact Card 1: Upload Employee Database Excel -->
-                    <div class="admin-card compact-card" style="padding: 0.65rem 0.95rem; width: 250px; max-width: 100%;">
+                    <div class="admin-card compact-card">
                         <div class="admin-card-header" style="gap: 0.4rem; margin-bottom: 0.25rem;">
                             <i data-lucide="file-spreadsheet" style="width: 15px; height: 15px; color: var(--accent-blue);"></i>
                             <h3 style="font-size: 0.82rem; color: var(--text-primary);">تحديث قاعدة الموظفين</h3>
@@ -116,12 +116,12 @@
                     </div>
 
                     <!-- Compact Card 2: Quick Stats & Actions -->
-                    <div class="admin-card compact-card" style="padding: 0.65rem 0.95rem; width: 250px; max-width: 100%;">
+                    <div class="admin-card compact-card">
                         <div class="admin-card-header" style="gap: 0.4rem; margin-bottom: 0.25rem;">
                             <i data-lucide="bar-chart-3" style="width: 15px; height: 15px; color: var(--accent-blue);"></i>
                             <h3 style="font-size: 0.82rem; color: var(--text-primary);">إحصائيات الإقرارات</h3>
                         </div>
-                        
+
                         <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.5rem;">
                             <div style="font-size: 0.95rem; font-weight: 800; color: var(--accent-blue); font-family: var(--font-en);">
                                 <span id="submissionsCount">0</span> <span style="font-size: 0.72rem; font-family: var(--font-ar); color: var(--text-secondary);">إقرار مستلم</span>
@@ -135,18 +135,18 @@
                 </div>
 
                 <!-- TOP LEFT: Search Input & Export Button -->
-                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
-                    <div class="search-box" style="width: 240px;">
+                <div class="admin-toprow-actions">
+                    <div class="search-box admin-search-box">
                         <i data-lucide="search"></i>
-                        <input 
-                            type="text" 
-                            id="tableSearchInput" 
-                            placeholder="بحث بالاسم أو الرقم الوظيفي..." 
+                        <input
+                            type="text"
+                            id="tableSearchInput"
+                            placeholder="بحث بالاسم أو الرقم الوظيفي..."
                             oninput="filterSubmissionsTable()"
                         >
                     </div>
 
-                    <button class="btn-success" onclick="exportSubmissionsToExcel()" style="padding: 0.55rem 1.1rem; font-size: 0.85rem; white-space: nowrap;">
+                    <button class="btn-success admin-export-btn" onclick="exportSubmissionsToExcel()">
                         <i data-lucide="file-output" style="width: 16px; height: 16px;"></i>
                         <span>تصدير إلى إكسيل (Export Excel)</span>
                     </button>
