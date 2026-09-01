@@ -1,19 +1,18 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/admin.html"
-    }
-  ],
-  "headers": [
+      "src": "^/$",
+      "dest": "/admin.html",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      }
+    },
     {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
+      "src": "^/(.*)$",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "continue": true
     }
   ]
 }
