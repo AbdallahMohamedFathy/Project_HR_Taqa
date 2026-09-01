@@ -67,7 +67,7 @@
             <!-- STEP 1: Employee ID Search -->
             <div class="step-content active" id="step1">
                 <div class="section-intro">
-                    <h2>مرحباً بك في</h2>
+                    <h2>مرحباً بك </h2>
                     <p>برجاء أدخل الرقم الوظيفي (Employee ID) الخاص بك للبدء في استكمال إقرار البيانات.</p>
                 </div>
 
@@ -78,8 +78,8 @@
                             الرقم الوظيفي:
                         </label>
                         <div class="input-wrapper">
-                            <input
-                                type="text"
+                            <input 
+                                type="text" 
                                 id="employeeIdInput"
                                 placeholder="أدخل الرقم الوظيفي (مثال: 13 أو 800)..."
                                 maxlength="6"
@@ -119,9 +119,8 @@
                 <div class="employee-profile-box glow-border">
                     <div class="profile-badge">
                         <i data-lucide="user-check"></i>
-                        <span>بيانات الموظف المسجلة</span>
+                        <span>تم التحقق من بيانات الموظف</span>
                     </div>
-                    
                     <div class="profile-details-grid">
                         <div class="detail-row">
                             <span class="detail-label">الرقم الوظيفي:</span>
@@ -146,8 +145,8 @@
                             الرقم القومي (14 رقم):
                         </label>
                         <div class="input-wrapper">
-                            <input
-                                type="text"
+                            <input 
+                                type="text" 
                                 id="nationalIdInput"
                                 placeholder="أدخل الرقم القومي المكون من 14 رقم..."
                                 maxlength="14"
@@ -183,16 +182,7 @@
                                 <span class="checkbox-custom"></span>
                                 <div class="checkbox-text">
                                     <strong>الموافقة على الشروط التنظيمية:</strong>
-                                    <p>أوافق على حفظ ومعالجة هذه البيانات ضمن السجلات الرسمية لإدارة الموارد البشرية بشركة طاقة.</p>
-                                </div>
-                            </label>
-
-                            <label class="checkbox-card">
-                                <input type="checkbox" id="agree3" class="agreement-checkbox" required oninvalid="this.setCustomValidity('برجاء الموافقة على هذا الإقرار للمتابعة.')" oninput="this.setCustomValidity('')">
-                                <span class="checkbox-custom"></span>
-                                <div class="checkbox-text">
-                                    <strong>الالتزام بالتعليمات:</strong>
-                                    <p>أتعهد بالالتزام بكافة اللوائح والتعليمات الداخلية الخاصة بالشركة وعدم استخدام البيانات بطرق غير مصرح بها.</p>
+                                    <p>أقر بموافقتي على خصم قيمة القسط الشهري مباشرة من مرتبي بمعرفة الشركة ، مع علمي التام بالتزامي سداد كامل قيمة مديونيتي للشركة في حالة انتهاء عقدي مع الشركة لأي سبب من الأسباب.</p>
                                 </div>
                             </label>
                         </div>
@@ -227,8 +217,8 @@
                         <i data-lucide="check-check"></i>
                         <span>تم الاعتماد والإرسال بنجاح ✓</span>
                     </div>
-                    <h2 id="successTitle">تم إرسال بياناتك بنجاح!</h2>
-                    <p id="successDesc">تم تسجيل إقرارك في النظام وتوثيق الوقت والتاريخ بنجاح. شكرًا لتعاونكم.</p>
+                    <h2 id="successTitle">تم إرسال طلب القرض المدرسي بنجاح!</h2>
+                    <p id="successDesc">تم تسجيل طلبك وإقرارك في النظام وتوثيق الوقت والتاريخ بنجاح. شكرًا لتعاونكم.</p>
 
                     <div class="submission-summary-box">
                         <div class="summary-item">
@@ -248,14 +238,14 @@
                             <strong id="summaryTimestamp">-</strong>
                         </div>
                         <div class="summary-item">
-                            <span>حالة الإقرار:</span>
+                            <span>حالة الطلب:</span>
                             <strong style="color: #059669;">مُعتمد ومُسجل بالسجلات ✓</strong>
                         </div>
                     </div>
 
                     <button class="btn-primary" onclick="resetForm()">
                         <i data-lucide="rotate-ccw"></i>
-                        <span>تسجيل إقرار آخر</span>
+                        <span>تسجيل طلب آخر</span>
                     </button>
                 </div>
             </div>
