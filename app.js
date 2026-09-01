@@ -250,7 +250,8 @@ function handleIdVerification(event) {
         document.getElementById('nationalIdCounter').innerText = "0 / 14";
         document.getElementById('agree1').checked = false;
         document.getElementById('agree2').checked = false;
-        document.getElementById('agree3').checked = false;
+        const agree3El = document.getElementById('agree3');
+        if (agree3El) agree3El.checked = false;
 
         // Transition to Step 2
         goToStep(2);
@@ -286,9 +287,9 @@ function handleFinalSubmission(event) {
     const nationalId = document.getElementById('nationalIdInput').value.trim();
     const errorBox = document.getElementById('step2Error');
     const errorText = document.getElementById('step2ErrorText');
-    const agree1 = document.getElementById('agree1').checked;
-    const agree2 = document.getElementById('agree2').checked;
-    const agree3 = document.getElementById('agree3').checked;
+    const agree1 = document.getElementById('agree1') ? document.getElementById('agree1').checked : true;
+    const agree2 = document.getElementById('agree2') ? document.getElementById('agree2').checked : true;
+    const agree3 = document.getElementById('agree3') ? document.getElementById('agree3').checked : true;
     const submitBtn = document.getElementById('submitBtn');
 
     errorBox.classList.add('hidden');
